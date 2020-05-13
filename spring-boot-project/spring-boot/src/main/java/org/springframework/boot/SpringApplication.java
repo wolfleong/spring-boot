@@ -336,6 +336,7 @@ public class SpringApplication {
 		configureHeadlessProperty();
 		// 获得 SpringApplicationRunListener 的数组，并启动监听
 		SpringApplicationRunListeners listeners = getRunListeners(args);
+		//通知开始监听
 		listeners.starting();
 		try {
 			//创建  ApplicationArguments 对象
@@ -817,11 +818,13 @@ public class SpringApplication {
 	}
 
 	/**
+	 * 获取 BeanDefinitionRegistry 对象
 	 * Get the bean definition registry.
 	 * @param context the application context
 	 * @return the BeanDefinitionRegistry if it can be determined
 	 */
 	private BeanDefinitionRegistry getBeanDefinitionRegistry(ApplicationContext context) {
+		//如果 context 是 BeanDefinitionRegistry 类型
 		if (context instanceof BeanDefinitionRegistry) {
 			return (BeanDefinitionRegistry) context;
 		}
