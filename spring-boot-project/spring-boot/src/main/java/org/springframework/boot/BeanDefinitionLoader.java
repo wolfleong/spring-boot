@@ -47,6 +47,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * BeanDefinition 加载器
  * Loads bean definitions from underlying sources, including XML and JavaConfig. Acts as a
  * simple facade over {@link AnnotatedBeanDefinitionReader},
  * {@link XmlBeanDefinitionReader} and {@link ClassPathBeanDefinitionScanner}. See
@@ -79,12 +80,17 @@ class BeanDefinitionLoader {
 		Assert.notNull(registry, "Registry must not be null");
 		Assert.notEmpty(sources, "Sources must not be empty");
 		this.sources = sources;
+		//用于处理注解配置的 BeanDefinition 的 Reader
 		this.annotatedReader = new AnnotatedBeanDefinitionReader(registry);
+		//用处理 xml 配置的 BeanDefinition 的 Reader
 		this.xmlReader = new XmlBeanDefinitionReader(registry);
+		// 处理groovy
 		if (isGroovyPresent()) {
 			this.groovyReader = new GroovyBeanDefinitionReader(registry);
 		}
+		//注解扫描器
 		this.scanner = new ClassPathBeanDefinitionScanner(registry);
+		//添加类过滤器
 		this.scanner.addExcludeFilter(new ClassExcludeFilter(sources));
 	}
 
@@ -130,6 +136,9 @@ class BeanDefinitionLoader {
 		return count;
 	}
 
+	/**
+	 * 根据 source 的类型, 调用不同的方法加载
+	 */
 	private int load(Object source) {
 		Assert.notNull(source, "Source must not be null");
 		if (source instanceof Class<?>) {
@@ -147,12 +156,17 @@ class BeanDefinitionLoader {
 		throw new IllegalArgumentException("Invalid source type " + source.getClass());
 	}
 
+	/**
+	 * 加载类资源
+	 */
 	private int load(Class<?> source) {
+		//如果是 groovy 的类, 则加载 groovy
 		if (isGroovyPresent() && GroovyBeanDefinitionSource.class.isAssignableFrom(source)) {
 			// Any GroovyLoaders added in beans{} DSL can contribute beans here
 			GroovyBeanDefinitionSource loader = BeanUtils.instantiateClass(source, GroovyBeanDefinitionSource.class);
 			load(loader);
 		}
+		//判断是否有 @Component , 有则注册 BeanDefinition
 		if (isComponent(source)) {
 			this.annotatedReader.register(source);
 			return 1;
@@ -211,6 +225,9 @@ class BeanDefinitionLoader {
 		throw new IllegalArgumentException("Invalid source '" + resolvedSource + "'");
 	}
 
+	/**
+	 * 判断是否 groovy 的类
+	 */
 	private boolean isGroovyPresent() {
 		return ClassUtils.isPresent("groovy.lang.MetaClass", null);
 	}

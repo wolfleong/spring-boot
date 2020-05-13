@@ -19,6 +19,7 @@ package org.springframework.boot;
 import org.springframework.util.ClassUtils;
 
 /**
+ * Web 应用类型
  * An enumeration of possible types of web application.
  *
  * @author Andy Wilkinson
@@ -28,18 +29,21 @@ import org.springframework.util.ClassUtils;
 public enum WebApplicationType {
 
 	/**
+	 * 非内嵌的 Web 应用
 	 * The application should not run as a web application and should not start an
 	 * embedded web server.
 	 */
 	NONE,
 
 	/**
+	 * 内嵌的 Servlet Web 应用。例如说，Spring MVC
 	 * The application should run as a servlet-based web application and should start an
 	 * embedded servlet web server.
 	 */
 	SERVLET,
 
 	/**
+	 * 内嵌的 Reactive Web 应用。例如说，Spring Webflux
 	 * The application should run as a reactive web application and should start an
 	 * embedded reactive web server.
 	 */
@@ -58,16 +62,22 @@ public enum WebApplicationType {
 
 	private static final String REACTIVE_APPLICATION_CONTEXT_CLASS = "org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext";
 
+	/**
+	 * 从 classpath 上，判断 Web 应用类型
+	 */
 	static WebApplicationType deduceFromClasspath() {
+		// WebApplicationType.REACTIVE 类型, // 存在 Spring Webflux 的类
 		if (ClassUtils.isPresent(WEBFLUX_INDICATOR_CLASS, null) && !ClassUtils.isPresent(WEBMVC_INDICATOR_CLASS, null)
 				&& !ClassUtils.isPresent(JERSEY_INDICATOR_CLASS, null)) {
 			return WebApplicationType.REACTIVE;
 		}
+		// WebApplicationType.NONE 类型
 		for (String className : SERVLET_INDICATOR_CLASSES) {
 			if (!ClassUtils.isPresent(className, null)) {
 				return WebApplicationType.NONE;
 			}
 		}
+		// WebApplicationType.SERVLET 类型。可以酱紫的判断的原因是，引入 Spring MVC 时，如果是内嵌的 Web 应用，会引入 Servlet 类
 		return WebApplicationType.SERVLET;
 	}
 
