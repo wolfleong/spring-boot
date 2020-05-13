@@ -29,6 +29,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * 实现 Condition 接口，Spring Boot Condition 的抽象基类，主要用于提供相应的日志，帮助开发者判断哪些被进行加载
  * Base of all {@link Condition} implementations used with Spring Boot. Provides sensible
  * logging to help the user diagnose what classes are loaded.
  *
@@ -42,11 +43,16 @@ public abstract class SpringBootCondition implements Condition {
 
 	@Override
 	public final boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		//获得注解的是方法名还是类名
 		String classOrMethodName = getClassOrMethodName(metadata);
 		try {
+			//条件匹配结果
 			ConditionOutcome outcome = getMatchOutcome(context, metadata);
+			//打印结果
 			logOutcome(classOrMethodName, outcome);
+			//记录
 			recordEvaluation(context, classOrMethodName, outcome);
+			//返回是否匹配
 			return outcome.isMatch();
 		}
 		catch (NoClassDefFoundError ex) {
@@ -72,11 +78,16 @@ public abstract class SpringBootCondition implements Condition {
 		return metadata.toString();
 	}
 
+	/**
+	 * 获得注解的是方法名还是类名
+	 */
 	private static String getClassOrMethodName(AnnotatedTypeMetadata metadata) {
+		// 类
 		if (metadata instanceof ClassMetadata) {
 			ClassMetadata classMetadata = (ClassMetadata) metadata;
 			return classMetadata.getClassName();
 		}
+		// 方法
 		MethodMetadata methodMetadata = (MethodMetadata) metadata;
 		return methodMetadata.getDeclaringClassName() + "#" + methodMetadata.getMethodName();
 	}
@@ -109,6 +120,7 @@ public abstract class SpringBootCondition implements Condition {
 	}
 
 	/**
+	 * 抽象方法，执行匹配，返回匹配结果
 	 * Determine the outcome of the match along with suitable log output.
 	 * @param context the condition context
 	 * @param metadata the annotation metadata
@@ -117,6 +129,7 @@ public abstract class SpringBootCondition implements Condition {
 	public abstract ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata);
 
 	/**
+	 * 判断是否匹配指定的 Condition 们中的任一一个
 	 * Return true if any of the specified conditions match.
 	 * @param context the context
 	 * @param metadata the annotation meta-data
@@ -125,7 +138,9 @@ public abstract class SpringBootCondition implements Condition {
 	 */
 	protected final boolean anyMatches(ConditionContext context, AnnotatedTypeMetadata metadata,
 			Condition... conditions) {
+		// 遍历 Condition
 		for (Condition condition : conditions) {
+			// 执行匹配
 			if (matches(context, metadata, condition)) {
 				return true;
 			}
@@ -141,6 +156,7 @@ public abstract class SpringBootCondition implements Condition {
 	 * @return {@code true} if the condition matches.
 	 */
 	protected final boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata, Condition condition) {
+		// 如果是 SpringBootCondition 类型，执行 SpringBootCondition 的直接匹配方法（无需日志）
 		if (condition instanceof SpringBootCondition) {
 			return ((SpringBootCondition) condition).getMatchOutcome(context, metadata).isMatch();
 		}

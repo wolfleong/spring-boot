@@ -60,6 +60,12 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ *
+ * 继承 FilteringSpringBootCondition 抽象类，给 @ConditionalOnBean、@ConditionalOnMissingBean、@ConditionalOnSingleCandidate
+ * 使用的 Condition 实现类
+ *
+ * todo wolfleong
+ *
  * {@link Condition} that checks for the presence or absence of specific beans.
  *
  * @author Phillip Webb

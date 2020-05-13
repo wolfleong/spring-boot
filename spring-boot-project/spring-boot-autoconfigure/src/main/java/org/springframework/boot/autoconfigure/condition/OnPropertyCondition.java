@@ -34,6 +34,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
 /**
+ * 继承 SpringBootCondition 抽象类，给 @ConditionalOnProperty 使用的 Condition 实现类
+ *
  * {@link Condition} that checks if properties are defined in environment.
  *
  * @author Maciej Walkowiak
@@ -47,20 +49,28 @@ class OnPropertyCondition extends SpringBootCondition {
 
 	@Override
 	public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		//获得 @ConditionalOnProperty 注解的属性
 		List<AnnotationAttributes> allAnnotationAttributes = annotationAttributesFromMultiValueMap(
 				metadata.getAllAnnotationAttributes(ConditionalOnProperty.class.getName()));
+		//存储匹配和不匹配的结果消息结果
 		List<ConditionMessage> noMatch = new ArrayList<>();
 		List<ConditionMessage> match = new ArrayList<>();
+		//遍历 annotationAttributes 属性数组，逐个判断是否匹配，并添加到结果
 		for (AnnotationAttributes annotationAttributes : allAnnotationAttributes) {
 			ConditionOutcome outcome = determineOutcome(annotationAttributes, context.getEnvironment());
 			(outcome.isMatch() ? match : noMatch).add(outcome.getConditionMessage());
 		}
+		//如果有不匹配的，则返回不匹配
 		if (!noMatch.isEmpty()) {
 			return ConditionOutcome.noMatch(ConditionMessage.of(noMatch));
 		}
+		//如果都匹配，则返回匹配
 		return ConditionOutcome.match(ConditionMessage.of(match));
 	}
 
+	/**
+	 * 获得 @ConditionalOnProperty 注解的属性
+	 */
 	private List<AnnotationAttributes> annotationAttributesFromMultiValueMap(
 			MultiValueMap<String, Object> multiValueMap) {
 		List<Map<String, Object>> maps = new ArrayList<>();
@@ -84,32 +94,55 @@ class OnPropertyCondition extends SpringBootCondition {
 		return annotationAttributes;
 	}
 
+	/**
+	 * 判断是否匹配
+	 */
 	private ConditionOutcome determineOutcome(AnnotationAttributes annotationAttributes, PropertyResolver resolver) {
+		//解析成 Spec 对象
 		Spec spec = new Spec(annotationAttributes);
+		//创建结果数组
 		List<String> missingProperties = new ArrayList<>();
 		List<String> nonMatchingProperties = new ArrayList<>();
+		//收集是否不匹配的信息，到 missingProperties、nonMatchingProperties 中
 		spec.collectProperties(resolver, missingProperties, nonMatchingProperties);
+		//如果有属性缺失，则返回不匹配
 		if (!missingProperties.isEmpty()) {
 			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnProperty.class, spec)
 					.didNotFind("property", "properties").items(Style.QUOTE, missingProperties));
 		}
+		//如果有属性不匹配，则返回不匹配
 		if (!nonMatchingProperties.isEmpty()) {
 			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnProperty.class, spec)
 					.found("different value in property", "different value in properties")
 					.items(Style.QUOTE, nonMatchingProperties));
 		}
+		//返回匹配
 		return ConditionOutcome
 				.match(ConditionMessage.forCondition(ConditionalOnProperty.class, spec).because("matched"));
 	}
 
 	private static class Spec {
 
+		/**
+		 * 属性前缀
+		 */
 		private final String prefix;
 
+		/**
+		 * 是否有指定值
+		 */
 		private final String havingValue;
 
+		/**
+		 * 属性名
+		 */
 		private final String[] names;
 
+		/**
+		 * 如果属性不存在，是否认为是匹配的。
+		 *
+		 * 如果为 false 时，就认为属性丢失，即不匹配。
+		 */
 		private final boolean matchIfMissing;
 
 		Spec(AnnotationAttributes annotationAttributes) {
@@ -119,10 +152,12 @@ class OnPropertyCondition extends SpringBootCondition {
 			}
 			this.prefix = prefix;
 			this.havingValue = annotationAttributes.getString("havingValue");
+			//获取所有属性名
 			this.names = getNames(annotationAttributes);
 			this.matchIfMissing = annotationAttributes.getBoolean("matchIfMissing");
 		}
 
+		// 从 value 或者 name 属性种，获得值
 		private String[] getNames(Map<String, Object> annotationAttributes) {
 			String[] value = (String[]) annotationAttributes.get("value");
 			String[] name = (String[]) annotationAttributes.get("name");
@@ -134,14 +169,20 @@ class OnPropertyCondition extends SpringBootCondition {
 		}
 
 		private void collectProperties(PropertyResolver resolver, List<String> missing, List<String> nonMatching) {
+			// 遍历 names 数组
 			for (String name : this.names) {
+				// 获得完整的 key
 				String key = this.prefix + name;
+				// 如果存在指定属性
 				if (resolver.containsProperty(key)) {
+					// 匹配值是否匹配
 					if (!isMatch(resolver.getProperty(key), this.havingValue)) {
 						nonMatching.add(name);
 					}
 				}
+				// 如果不存在指定属性
 				else {
+					// 如果属性为空，并且 matchIfMissing 为 false ，则添加到 missing 中
 					if (!this.matchIfMissing) {
 						missing.add(name);
 					}
@@ -150,9 +191,11 @@ class OnPropertyCondition extends SpringBootCondition {
 		}
 
 		private boolean isMatch(String value, String requiredValue) {
+			// 如果 requiredValue 非空，则进行匹配
 			if (StringUtils.hasLength(requiredValue)) {
 				return requiredValue.equalsIgnoreCase(value);
 			}
+			// 如果 requiredValue 为空，要求值不为 false
 			return !"false".equalsIgnoreCase(value);
 		}
 

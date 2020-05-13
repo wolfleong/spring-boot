@@ -202,7 +202,6 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 	 */
 	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
 		//加载指定类型 EnableAutoConfiguration 对应的，在 `META-INF/spring.factories` 里的类名的数组
-		//配置文件中所有的配置类都是存在的
 		List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(),
 				getBeanClassLoader());
 		// 断言，非空
@@ -285,9 +284,12 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 
 	/**
 	 * 从 spring.factories 中加载 AutoConfigurationImportFilter 实现
-	 * @return
 	 */
 	protected List<AutoConfigurationImportFilter> getAutoConfigurationImportFilters() {
+		//默认有三种过滤器
+		//org.springframework.boot.autoconfigure.condition.OnBeanCondition,\
+		//org.springframework.boot.autoconfigure.condition.OnClassCondition,\
+		//org.springframework.boot.autoconfigure.condition.OnWebApplicationCondition
 		return SpringFactoriesLoader.loadFactories(AutoConfigurationImportFilter.class, this.beanClassLoader);
 	}
 
@@ -400,6 +402,9 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 	 */
 	private static class ConfigurationClassFilter {
 
+		/**
+		 * 自动配置的元数据
+		 */
 		private final AutoConfigurationMetadata autoConfigurationMetadata;
 
 		private final List<AutoConfigurationImportFilter> filters;
@@ -410,9 +415,11 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		}
 
 		List<String> filter(List<String> configurations) {
+			// 记录开始时间，用于下面统计消耗的时间
 			long startTime = System.nanoTime();
-			//转数组
+			//配置类名列表转数组
 			String[] candidates = StringUtils.toStringArray(configurations);
+			// 是否有需要忽略的
 			boolean skipped = false;
 			//遍历过滤器
 			for (AutoConfigurationImportFilter filter : this.filters) {
@@ -421,7 +428,9 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 				//遍历, 判断是否有不匹配的
 				for (int i = 0; i < match.length; i++) {
 					if (!match[i]) {
+						//不匹配, 标记为 null
 						candidates[i] = null;
+						//标记需要 skip
 						skipped = true;
 					}
 				}
@@ -437,11 +446,13 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 					result.add(candidate);
 				}
 			}
+			// 打印，消耗的时间，已经排除的数量
 			if (logger.isTraceEnabled()) {
 				int numberFiltered = configurations.size() - result.size();
 				logger.trace("Filtered " + numberFiltered + " auto configuration class in "
 						+ TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) + " ms");
 			}
+			//返回
 			return result;
 		}
 
