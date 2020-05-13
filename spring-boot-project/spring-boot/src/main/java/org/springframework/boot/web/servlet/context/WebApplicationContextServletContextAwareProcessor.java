@@ -24,6 +24,7 @@ import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.support.ServletContextAwareProcessor;
 
 /**
+ * 主要是处理实现 ServletContextAware 接口的 Bean
  * Variant of {@link ServletContextAwareProcessor} for use with a
  * {@link ConfigurableWebApplicationContext}. Can be used when registering the processor
  * can occur before the {@link ServletContext} or {@link ServletConfig} have been
