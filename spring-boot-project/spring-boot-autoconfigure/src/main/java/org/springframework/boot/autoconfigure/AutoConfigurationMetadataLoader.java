@@ -58,6 +58,7 @@ final class AutoConfigurationMetadataLoader {
 	}
 
 	static AutoConfigurationMetadata loadMetadata(Properties properties) {
+		//创建 PropertiesAutoConfigurationMetadata
 		return new PropertiesAutoConfigurationMetadata(properties);
 	}
 

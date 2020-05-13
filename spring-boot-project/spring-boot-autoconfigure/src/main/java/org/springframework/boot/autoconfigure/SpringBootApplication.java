@@ -37,6 +37,8 @@ import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.repository.Repository;
 
 /**
+ * 一个组合注解, 标记这是一个 Spring Boot 应用，而且开启自动配置的功能
+ *
  * Indicates a {@link Configuration configuration} class that declares one or more
  * {@link Bean @Bean} methods and also triggers {@link EnableAutoConfiguration
  * auto-configuration} and {@link ComponentScan component scanning}. This is a convenience

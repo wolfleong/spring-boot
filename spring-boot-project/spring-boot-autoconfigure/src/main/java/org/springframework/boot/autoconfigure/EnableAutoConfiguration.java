@@ -34,6 +34,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 
 /**
+ * 用于开启自动配置功能, 这个注解也是个组合注解
+ *  - @AutoConfigurationPackage
+ *  - @Import(AutoConfigurationImportSelector.class)
+ *
  * Enable auto-configuration of the Spring Application Context, attempting to guess and
  * configure beans that you are likely to need. Auto-configuration classes are usually
  * applied based on your classpath and what beans you have defined. For example, if you

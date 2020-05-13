@@ -55,6 +55,7 @@ public abstract class AutoConfigurationPackages {
 	private static final String BEAN = AutoConfigurationPackages.class.getName();
 
 	/**
+	 * 判断是否存在该 BEAN 在传入的容器中
 	 * Determine if the auto-configuration base packages for the given bean factory are
 	 * available.
 	 * @param beanFactory the source bean factory
@@ -65,6 +66,7 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	/**
+	 * 获得 BEAN
 	 * Return the auto-configuration base packages for the given bean factory.
 	 * @param beanFactory the source bean factory
 	 * @return a list of auto-configuration packages
@@ -80,6 +82,7 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	/**
+	 * 注册一个用于存储报名（package）的 Bean 到 Spring IoC 容器中
 	 * Programmatically registers the auto-configuration package names. Subsequent
 	 * invocations will add the given package names to those that have already been
 	 * registered. You can use this method to manually define the base packages that will
@@ -91,11 +94,13 @@ public abstract class AutoConfigurationPackages {
 	 * @param packageNames the package names to set
 	 */
 	public static void register(BeanDefinitionRegistry registry, String... packageNames) {
+		//如果已经存在该 BEAN ，则修改其包（package）属性
 		if (registry.containsBeanDefinition(BEAN)) {
 			BeanDefinition beanDefinition = registry.getBeanDefinition(BEAN);
 			ConstructorArgumentValues constructorArguments = beanDefinition.getConstructorArgumentValues();
 			constructorArguments.addIndexedArgumentValue(0, addBasePackages(constructorArguments, packageNames));
 		}
+		//如果不存在该 BEAN ，则创建一个 Bean ，并进行注册
 		else {
 			GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
 			beanDefinition.setBeanClass(BasePackages.class);
@@ -106,7 +111,9 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	private static String[] addBasePackages(ConstructorArgumentValues constructorArguments, String[] packageNames) {
+		// 获得已存在的
 		String[] existing = (String[]) constructorArguments.getIndexedArgumentValue(0, String[].class).getValue();
+		// 进行合并
 		Set<String> merged = new LinkedHashSet<>();
 		merged.addAll(Arrays.asList(existing));
 		merged.addAll(Arrays.asList(packageNames));
@@ -114,6 +121,9 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	/**
+	 * 是 AutoConfigurationPackages 的内部类，实现 ImportBeanDefinitionRegistrar、DeterminableImports 接口，注册器，
+	 * 用于处理 @AutoConfigurationPackage 注解
+	 *
 	 * {@link ImportBeanDefinitionRegistrar} to store the base package from the importing
 	 * configuration.
 	 */
@@ -132,25 +142,34 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	/**
+	 * 内部类, 用于获得包名
 	 * Wrapper for a package import.
 	 */
 	private static final class PackageImports {
 
+		/**
+		 * 包名列表
+		 */
 		private final List<String> packageNames;
 
 		PackageImports(AnnotationMetadata metadata) {
+			//获取注解属性
 			AnnotationAttributes attributes = AnnotationAttributes
 					.fromMap(metadata.getAnnotationAttributes(AutoConfigurationPackage.class.getName(), false));
 			List<String> packageNames = new ArrayList<>();
+			//添加注解上自定义的包
 			for (String basePackage : attributes.getStringArray("basePackages")) {
 				packageNames.add(basePackage);
 			}
+			//获取注解上自定类的包
 			for (Class<?> basePackageClass : attributes.getClassArray("basePackageClasses")) {
 				packageNames.add(basePackageClass.getPackage().getName());
 			}
+			//如果注解上自定义的包都为空, 则获取元数据所在类的包名
 			if (packageNames.isEmpty()) {
 				packageNames.add(ClassUtils.getPackageName(metadata.getClassName()));
 			}
+			//设置不可变
 			this.packageNames = Collections.unmodifiableList(packageNames);
 		}
 
@@ -179,6 +198,7 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	/**
+	 * 一个有 packages 属性的封装类
 	 * Holder for the base package (name may be null to indicate no scanning).
 	 */
 	static final class BasePackages {
