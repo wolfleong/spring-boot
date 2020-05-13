@@ -22,6 +22,9 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.Resource;
 
 /**
+ * 实现 ConfigurableReactiveWebApplicationContext 接品,
+ * 继承 GenericApplicationContext 类，通用的 Reactive Web ApplicationContext 实现类
+ *
  * Subclass of {@link GenericApplicationContext}, suitable for reactive web environments.
  *
  * @author Stephane Nicoll
@@ -50,11 +53,17 @@ public class GenericReactiveWebApplicationContext extends GenericApplicationCont
 		super(beanFactory);
 	}
 
+	/**
+	 * // 覆写 AbstractApplicationContext 方法
+	 */
 	@Override
 	protected ConfigurableEnvironment createEnvironment() {
 		return new StandardReactiveWebEnvironment();
 	}
 
+	/**
+	 * 覆写 AbstractApplicationContext 方法
+	 */
 	@Override
 	protected Resource getResourceByPath(String path) {
 		// We must be careful not to expose classpath resources

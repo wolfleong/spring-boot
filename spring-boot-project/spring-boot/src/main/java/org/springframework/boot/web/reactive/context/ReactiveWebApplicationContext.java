@@ -19,6 +19,7 @@ package org.springframework.boot.web.reactive.context;
 import org.springframework.context.ApplicationContext;
 
 /**
+ * 继承 ApplicationContext 接口，Reactive Web ApplicationContext 接口
  * Interface to provide configuration for a reactive web application.
  *
  * @author Stephane Nicoll

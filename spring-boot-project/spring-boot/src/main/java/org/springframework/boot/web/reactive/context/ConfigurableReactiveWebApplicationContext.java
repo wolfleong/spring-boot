@@ -19,6 +19,7 @@ package org.springframework.boot.web.reactive.context;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
+ * 继承 ConfigurableApplicationContext、 ReactiveWebApplicationContext 接口，可配置的 ReactiveWebApplicationContext 接口
  * Interface to provide configuration for a reactive web application.
  *
  * @author Stephane Nicoll
