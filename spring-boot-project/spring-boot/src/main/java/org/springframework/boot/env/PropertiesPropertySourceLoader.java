@@ -26,6 +26,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 /**
+ * 实现 PropertySourceLoader 接口，加载 .xml 和 .properties 类型的配置文件
  * Strategy to load '.properties' files into a {@link PropertySource}.
  *
  * @author Dave Syer
@@ -44,10 +45,13 @@ public class PropertiesPropertySourceLoader implements PropertySourceLoader {
 
 	@Override
 	public List<PropertySource<?>> load(String name, Resource resource) throws IOException {
+		//读取指定配置文件，返回 Map 对象
 		Map<String, ?> properties = loadProperties(resource);
+		//如果 Map 为空，返回空数组
 		if (properties.isEmpty()) {
 			return Collections.emptyList();
 		}
+		//将 Map 封装成 OriginTrackedMapPropertySource 对象，然后返回单元素的数组
 		return Collections
 				.singletonList(new OriginTrackedMapPropertySource(name, Collections.unmodifiableMap(properties), true));
 	}
@@ -55,9 +59,11 @@ public class PropertiesPropertySourceLoader implements PropertySourceLoader {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Map<String, ?> loadProperties(Resource resource) throws IOException {
 		String filename = resource.getFilename();
+		// 读取 XML 后缀的配置文件
 		if (filename != null && filename.endsWith(XML_FILE_EXTENSION)) {
 			return (Map) PropertiesLoaderUtils.loadProperties(resource);
 		}
+		// 读取 Properties 后缀的配置文件
 		return new OriginTrackedPropertiesLoader(resource).load();
 	}
 

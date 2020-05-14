@@ -24,6 +24,7 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 /**
+ * 过滤给定属性列表的 PropertySource
  * Internal {@link PropertySource} implementation used by
  * {@link ConfigFileApplicationListener} to filter out properties for specific operations.
  *
@@ -31,6 +32,9 @@ import org.springframework.core.env.PropertySource;
  */
 class FilteredPropertySource extends PropertySource<PropertySource<?>> {
 
+	/**
+	 * 过滤属性
+	 */
 	private final Set<String> filteredProperties;
 
 	FilteredPropertySource(PropertySource<?> original, Set<String> filteredProperties) {
@@ -40,25 +44,34 @@ class FilteredPropertySource extends PropertySource<PropertySource<?>> {
 
 	@Override
 	public Object getProperty(String name) {
+		//如果是过滤属性, 则返回 null
 		if (this.filteredProperties.contains(name)) {
 			return null;
 		}
+		//获取对应的属性值
 		return getSource().getProperty(name);
 	}
 
 	static void apply(ConfigurableEnvironment environment, String propertySourceName, Set<String> filteredProperties,
 			Consumer<PropertySource<?>> operation) {
+		//获取环境中的 MutablePropertySources
 		MutablePropertySources propertySources = environment.getPropertySources();
+		//根据名称获取对应的 PropertySource
 		PropertySource<?> original = propertySources.get(propertySourceName);
+		//如果是 null, 则调用函数处理返回
 		if (original == null) {
 			operation.accept(null);
 			return;
 		}
+		//指定的 PropertySource 不为 null
+		//替换成 FilteredPropertySource
 		propertySources.replace(propertySourceName, new FilteredPropertySource(original, filteredProperties));
 		try {
+			//执行函数
 			operation.accept(original);
 		}
 		finally {
+			//替换回来
 			propertySources.replace(propertySourceName, original);
 		}
 	}

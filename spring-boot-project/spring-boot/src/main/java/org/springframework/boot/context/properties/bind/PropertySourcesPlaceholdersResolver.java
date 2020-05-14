@@ -25,6 +25,7 @@ import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.util.SystemPropertyUtils;
 
 /**
+ * 实现 PropertySource 对应的值是占位符的解析器
  * {@link PlaceholdersResolver} to resolve placeholders from {@link PropertySources}.
  *
  * @author Phillip Webb
@@ -53,6 +54,7 @@ public class PropertySourcesPlaceholdersResolver implements PlaceholdersResolver
 
 	@Override
 	public Object resolvePlaceholders(Object value) {
+		// 如果 value 是 String 类型，才是占位符
 		if (value instanceof String) {
 			return this.helper.replacePlaceholders((String) value, this::resolvePlaceholder);
 		}
@@ -61,6 +63,7 @@ public class PropertySourcesPlaceholdersResolver implements PlaceholdersResolver
 
 	protected String resolvePlaceholder(String placeholder) {
 		if (this.sources != null) {
+			// 遍历 sources 数组，逐个获得属性值。若获取到，则进行返回
 			for (PropertySource<?> source : this.sources) {
 				Object value = source.getProperty(placeholder);
 				if (value != null) {
@@ -71,6 +74,9 @@ public class PropertySourcesPlaceholdersResolver implements PlaceholdersResolver
 		return null;
 	}
 
+	/**
+	 * // 获得 PropertySources 们
+	 */
 	private static PropertySources getSources(Environment environment) {
 		Assert.notNull(environment, "Environment must not be null");
 		Assert.isInstanceOf(ConfigurableEnvironment.class, environment,

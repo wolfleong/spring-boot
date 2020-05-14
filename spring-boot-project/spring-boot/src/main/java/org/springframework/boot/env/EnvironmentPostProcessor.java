@@ -21,6 +21,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
 /**
+ * 在 Environment 加载完成之后，如果我们需要对其进行一些配置、增加一些自己的处理逻辑，那么请使用 EnvironmentPostProcessor
  * Allows for customization of the application's {@link Environment} prior to the
  * application context being refreshed.
  * <p>

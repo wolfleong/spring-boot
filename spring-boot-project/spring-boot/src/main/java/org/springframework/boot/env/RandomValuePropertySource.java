@@ -29,6 +29,7 @@ import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * 继承 PropertySource 类，提供随机值的 PropertySource 实现类
  * {@link PropertySource} that returns a random value for any property that starts with
  * {@literal "random."}. Where the "unqualified property name" is the portion of the
  * requested property name beyond the "random." prefix, this {@link PropertySource}
@@ -72,12 +73,14 @@ public class RandomValuePropertySource extends PropertySource<Random> {
 
 	@Override
 	public Object getProperty(String name) {
+		//必须以 random. 前缀
 		if (!name.startsWith(PREFIX)) {
 			return null;
 		}
 		if (logger.isTraceEnabled()) {
 			logger.trace("Generating random property for '" + name + "'");
 		}
+		//根据类型，获得随机值
 		return getRandomValue(name.substring(PREFIX.length()));
 	}
 
@@ -137,6 +140,9 @@ public class RandomValuePropertySource extends PropertySource<Random> {
 		return DigestUtils.md5DigestAsHex(bytes);
 	}
 
+	/**
+	 * 创建 RandomValueProertySource 对象，添加到 environment 中
+	 */
 	public static void addToEnvironment(ConfigurableEnvironment environment) {
 		environment.getPropertySources().addAfter(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 				new RandomValuePropertySource(RANDOM_PROPERTY_SOURCE_NAME));

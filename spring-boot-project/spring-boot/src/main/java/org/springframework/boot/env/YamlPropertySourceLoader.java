@@ -27,6 +27,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.ClassUtils;
 
 /**
+ * 实现 PropertySourceLoader 接口，加载 .yaml 和 .yml 类型的配置文件
  * Strategy to load '.yml' (or '.yaml') files into a {@link PropertySource}.
  *
  * @author Dave Syer
@@ -43,14 +44,18 @@ public class YamlPropertySourceLoader implements PropertySourceLoader {
 
 	@Override
 	public List<PropertySource<?>> load(String name, Resource resource) throws IOException {
+		//如果不存在 org.yaml.snakeyaml.Yaml 类，说明没有引入 snakeyaml 依赖
 		if (!ClassUtils.isPresent("org.yaml.snakeyaml.Yaml", null)) {
 			throw new IllegalStateException(
 					"Attempted to load " + name + " but snakeyaml was not found on the classpath");
 		}
+		//加载配置，返回 Map 数组
 		List<Map<String, Object>> loaded = new OriginTrackedYamlLoader(resource).load();
+		//如果数组为空，返回空数组
 		if (loaded.isEmpty()) {
 			return Collections.emptyList();
 		}
+		//将 Map 数组，封装成 OriginTrackedMapPropertySource 数组，返回
 		List<PropertySource<?>> propertySources = new ArrayList<>(loaded.size());
 		for (int i = 0; i < loaded.size(); i++) {
 			String documentNumber = (loaded.size() != 1) ? " (document #" + i + ")" : "";
