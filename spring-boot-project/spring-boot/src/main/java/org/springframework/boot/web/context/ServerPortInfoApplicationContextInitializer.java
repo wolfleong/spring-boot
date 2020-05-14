@@ -33,6 +33,9 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.util.StringUtils;
 
 /**
+ * 实现 ApplicationContextInitializer、ApplicationListener 接口，监听 WebServerInitializedEvent 类型的事件，
+ * 然后将内嵌的 Web 服务器使用的端口给设置到 ApplicationContext 中
+ *
  * {@link ApplicationContextInitializer} that sets {@link Environment} properties for the
  * ports that {@link WebServer} servers are actually listening on. The property
  * {@literal "local.server.port"} can be injected directly into tests using
@@ -54,12 +57,18 @@ public class ServerPortInfoApplicationContextInitializer implements
 
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
+		//将自身作为一个 ApplicationListener 监听器，添加到 Spring 容器中
 		applicationContext.addApplicationListener(this);
 	}
 
+	/**
+	 * 当监听到 WebServerInitializedEvent 事件，进行触发
+	 */
 	@Override
 	public void onApplicationEvent(WebServerInitializedEvent event) {
+		//获得属性名
 		String propertyName = "local." + getName(event.getApplicationContext()) + ".port";
+		//设置端口到 environment 的 propertyName 中
 		setPortProperty(event.getApplicationContext(), propertyName, event.getWebServer().getPort());
 	}
 
@@ -69,9 +78,11 @@ public class ServerPortInfoApplicationContextInitializer implements
 	}
 
 	private void setPortProperty(ApplicationContext context, String propertyName, int port) {
+		// 设置端口到 environment 的 propertyName 中
 		if (context instanceof ConfigurableApplicationContext) {
 			setPortProperty(((ConfigurableApplicationContext) context).getEnvironment(), propertyName, port);
 		}
+		// 如果有父容器，则继续设置
 		if (context.getParent() != null) {
 			setPortProperty(context.getParent(), propertyName, port);
 		}
@@ -80,11 +91,13 @@ public class ServerPortInfoApplicationContextInitializer implements
 	@SuppressWarnings("unchecked")
 	private void setPortProperty(ConfigurableEnvironment environment, String propertyName, int port) {
 		MutablePropertySources sources = environment.getPropertySources();
+		// 获得 "server.ports" 属性对应的值
 		PropertySource<?> source = sources.get("server.ports");
 		if (source == null) {
 			source = new MapPropertySource("server.ports", new HashMap<>());
 			sources.addFirst(source);
 		}
+		// 添加到 source 中
 		((Map<String, Object>) source.getSource()).put(propertyName, port);
 	}
 
