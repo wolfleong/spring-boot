@@ -30,6 +30,7 @@ import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.ResolvableType;
 
 /**
+ * 实现 GenericApplicationListener 接口，程序启动时，将 classpath 打印到 debug 日志，启动失败时 classpath 打印到 debug 日志
  * A {@link SmartApplicationListener} that reacts to
  * {@link ApplicationEnvironmentPreparedEvent environment prepared events} and to
  * {@link ApplicationFailedEvent failed events} by logging the classpath of the thread
@@ -40,6 +41,9 @@ import org.springframework.core.ResolvableType;
  */
 public final class ClasspathLoggingApplicationListener implements GenericApplicationListener {
 
+	/**
+	 * 顺序
+	 */
 	private static final int ORDER = LoggingApplicationListener.DEFAULT_ORDER + 1;
 
 	private static final Log logger = LogFactory.getLog(ClasspathLoggingApplicationListener.class);
@@ -47,9 +51,11 @@ public final class ClasspathLoggingApplicationListener implements GenericApplica
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		if (logger.isDebugEnabled()) {
+			// 如果是 ApplicationEnvironmentPreparedEvent 事件，说明启动成功，打印成功到 debug 日志中
 			if (event instanceof ApplicationEnvironmentPreparedEvent) {
 				logger.debug("Application started with classpath: " + getClasspath());
 			}
+			// 如果是 ApplicationFailedEvent 事件，说明启动失败，打印失败到 debug 日志中
 			else if (event instanceof ApplicationFailedEvent) {
 				logger.debug("Application failed to start with classpath: " + getClasspath());
 			}
@@ -63,14 +69,19 @@ public final class ClasspathLoggingApplicationListener implements GenericApplica
 
 	@Override
 	public boolean supportsEventType(ResolvableType resolvableType) {
+		// 使用 ResolvableType 类，可以解析当前传入的参数的泛型，从而后的事件类型
 		Class<?> type = resolvableType.getRawClass();
 		if (type == null) {
 			return false;
 		}
+		// 判断是否需为 ApplicationEnvironmentPreparedEvent 或者 ApplicationFailedEvent 事件
 		return ApplicationEnvironmentPreparedEvent.class.isAssignableFrom(type)
 				|| ApplicationFailedEvent.class.isAssignableFrom(type);
 	}
 
+	/**
+	 *  获得 classpath
+	 */
 	private String getClasspath() {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		if (classLoader instanceof URLClassLoader) {

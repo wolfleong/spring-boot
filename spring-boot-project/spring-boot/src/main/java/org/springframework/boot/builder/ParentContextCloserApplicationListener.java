@@ -29,6 +29,7 @@ import org.springframework.core.Ordered;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * 容器关闭时发出通知，如果父容器关闭，那么自容器也一起关闭
  * Listener that closes the application context if its parent is closed. It listens for
  * refresh events and grabs the current context from there, and then listens for closed
  * events and propagates it down the hierarchy.
@@ -60,8 +61,11 @@ public class ParentContextCloserApplicationListener
 	}
 
 	private void maybeInstallListenerInParent(ConfigurableApplicationContext child) {
+		// 如果 child 是当前容器
+		// 并且父容器是 ConfigurableApplicationContext 类型
 		if (child == this.context && child.getParent() instanceof ConfigurableApplicationContext) {
 			ConfigurableApplicationContext parent = (ConfigurableApplicationContext) child.getParent();
+			// 向父容器添加监听器，监听父容器的关闭事件
 			parent.addApplicationListener(createContextCloserListener(child));
 		}
 	}
@@ -77,6 +81,7 @@ public class ParentContextCloserApplicationListener
 	}
 
 	/**
+	 * 实现 ApplicationListener 接口，监听父容器关闭时，关闭自己（容器）
 	 * {@link ApplicationListener} to close the context.
 	 */
 	protected static class ContextCloserListener implements ApplicationListener<ContextClosedEvent> {
@@ -90,7 +95,9 @@ public class ParentContextCloserApplicationListener
 		@Override
 		public void onApplicationEvent(ContextClosedEvent event) {
 			ConfigurableApplicationContext context = this.childContext.get();
+			// 并且当前容器是启动状态
 			if ((context != null) && (event.getApplicationContext() == context.getParent()) && context.isActive()) {
+				// 关闭当前容器
 				context.close();
 			}
 		}

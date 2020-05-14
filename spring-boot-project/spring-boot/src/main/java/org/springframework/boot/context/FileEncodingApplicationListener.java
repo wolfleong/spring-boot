@@ -25,6 +25,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
+ * 在Spring Boot 环境准备完成以后运行，获取环境中的系统环境参数，
+ * 检测当前系统环境的 file.encoding 和 spring.mandatory-file-encoding 设置的值是否一样，如果不一样则抛出异常；
+ * 如果不配置 spring.mandatory-file-encoding 则不检查
  * An {@link ApplicationListener} that halts application startup if the system file
  * encoding does not match an expected value set in the environment. By default has no
  * effect, but if you set {@code spring.mandatory_file_encoding} (or some camelCase or
@@ -59,10 +62,13 @@ public class FileEncodingApplicationListener
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
 		ConfigurableEnvironment environment = event.getEnvironment();
 		String desired = environment.getProperty("spring.mandatory-file-encoding");
+		// 如果未配置，则不进行检查
 		if (desired == null) {
 			return;
 		}
 		String encoding = System.getProperty("file.encoding");
+		// 比对系统变量的 `file.encoding` ，和环境变量的 `spring.mandatory-file-encoding` 。
+		// 如果不一致，抛出 IllegalStateException 异常
 		if (encoding != null && !desired.equalsIgnoreCase(encoding)) {
 			if (logger.isErrorEnabled()) {
 				logger.error("System property 'file.encoding' is currently '" + encoding + "'. It should be '" + desired
