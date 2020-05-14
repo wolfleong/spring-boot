@@ -397,6 +397,7 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 						}
 						//这里处理的是, profile=null, spring.profiles != null
 						//无 Profile 的情况, 加载配置, 这里的 addToLoaded 方法是添加到头部, 上面为什么不用添加到 addFirst , 因为 null 的 profile 本来就在第一
+						//todo 这里要校验是否存在, 什么情况下才会校验存在呢?
 						load(null, this::getNegativeProfileFilter, addToLoaded(MutablePropertySources::addFirst, true));
 						//将加载的配置对应的 MutablePropertySources 到 environment 中
 						addLoadedPropertySources();
